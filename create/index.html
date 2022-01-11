@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset='utf-8'/>
+	<script type='text/javascript'>
+		let semester = {
+			/*
+			// Template
+			"date" : "[school] mmm dd, yyyy to mmm dd, yyyy",
+			"calendar" : [
+				{
+					"title" : "",
+					"courses" : [
+						{
+							"details" : "[department] [course number]",
+							"section" : "",
+							"crn" : "",
+							"schedules" : [
+								{
+									"type" : "",
+									"day" : "[d][d][d][d][d]",
+									"start" : ["hh", "mm", "AMPM"],
+									"time" : ["hh", "mm", "AMPM"],
+									"location" : "[building] [room]"
+								}
+							]
+						},
+					]
+				}
+			]
+			*/
+		};
+	</script>
+	<style>
+		html {
+			font-size: 90%;
+		}
+		body {
+			font-family: tahoma, arial narrow, arial, helvetica, sans-serif;
+		}
+
+		.calendar th, .day, .time, .start {
+			font-weight: bold;
+			font-size: 0.76rem;
+			font-family: "Trebuchet MS", inherent;
+			text-transform: uppercase;
+			letter-spacing: 0.18em;
+			color: #4f6b72;
+			background: #cae8ea;
+			padding: 0.27em;
+			padding-left: 0.55em;
+			border: 1px solid #c1dad7;
+		}
+
+		.calendar th {
+			vertical-align: top;
+		}
+
+		.day {
+			font-family: 'courier new';
+			white-space: pre;
+		}
+
+		.start, .time {
+			text-align: right;
+		}
+
+		td {
+			border: 1px #c1dad7;
+			border-style: none solid solid none;
+			white-space: pre;
+		}
+
+		.hphantom {
+			white-space: pre;
+			display: inline-block;
+			height: 0pt;
+			overflow: hidden;
+		}
+
+		.roster th {
+			font-weight: inherit;
+		}
+
+		.roster th + th {
+			text-align: left;
+		}
+
+		.distance .day, .distance .start, .distance .time {
+			padding-right: 0pt;
+			padding-left: 0pt;
+			text-align: center;
+		}
+
+	</style>
+</head>
+<body>
+	<h3></h3>
+	<table class="calendar" summary="This layout table is used to present the weekly course schedule." width="80%">
+		<thead>
+			<tr>
+				<th scope="col">&nbsp;</th>
+				<th scope="col">&nbsp;&nbsp;&nbsp;Monday&nbsp;&nbsp;&nbsp;</th>
+				<th scope="col">&nbsp;&nbsp;&nbsp;Tuesday&nbsp;&nbsp;&nbsp;</th>
+				<th scope="col">&nbsp;&nbsp;&nbsp;Wednesday&nbsp;&nbsp;&nbsp;</th>
+				<th scope="col">&nbsp;&nbsp;&nbsp;Thursday&nbsp;&nbsp;&nbsp;</th>
+				<th scope="col">&nbsp;&nbsp;&nbsp;Friday&nbsp;&nbsp;&nbsp;</th>
+				<th scope="col">&nbsp;&nbsp;&nbsp;Saturday&nbsp;&nbsp;&nbsp;</th>
+				<th scope="col">&nbsp;&nbsp;&nbsp;Sunday&nbsp;&nbsp;&nbsp;</th>
+			</tr>
+		</thead>
+	<!--
+		<tr>
+			<th rowspan="4" scope="row"></th>
+			<td>&nbsp;</td>
+			<td>&nbsp;</td>
+			<td>&nbsp;</td>
+			<td>&nbsp;</td>
+			<td>&nbsp;</td>
+			<td>&nbsp;</td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td>&nbsp;</td>
+			<td>&nbsp;</td>
+			<td>&nbsp;</td>
+			<td>&nbsp;</td>
+			<td>&nbsp;</td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td>&nbsp;</td>
+			<td>&nbsp;</td>
+			<td>&nbsp;</td>
+			<td>&nbsp;</td>
+			<td>&nbsp;</td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td>&nbsp;</td>
+			<td>&nbsp;</td>
+			<td>&nbsp;</td>
+			<td>&nbsp;</td>
+			<td>&nbsp;</td>
+			<td>&nbsp;</td>
+		</tr>
+	-->
+	</table>
+	<div class='roster'>
+		<h3>Roster</h3>
+		<table>
+		</table>
+	</div>
+	<script type='text/javascript'>
+		(function (semester) {
+			let days = 'MTWHFSU';
+
+			set_date(semester);
+			let min_start = 24*60;
+			let max_time = 0;
+
+			// stylesheet and hues for different calendar items
+			let stylesheet = document.getElementsByTagName('style')[0];
+			let hue = 6;
+			let hue_inc = (360/(semester.calendar.length));
+
+			// find the schedule limits,
+			// and add the styles for each calendar item
+			for (let cal_item of semester.calendar) {
+				for (let course of cal_item.courses) {
+					for (let schedule of course.schedules) {
+						let start = time_value(schedule.start);
+						let time = time_value(schedule.time);
+						if (min_start > start) {
+							min_start = start;
+						}
+						if (max_time < time) {
+							max_time = time;
+						}
+						console.log(cal_item);
+					}
+				}
+				// create the class name
+				let className = cal_item.courses[0].details.split(' ').join('-');
+				// style each cal_item
+				let style = [
+					'td.', className,
+					', .', className, ' th ',
+					'{ background: hsla(', Math.round(hue), ', 93%, 71%, 1) }'
+				].join('');
+				stylesheet.append(style);
+				// update hue and modulo if necessary
+				hue += hue_inc;
+				if (hue >= 360) { hue -= 360; }
+			}
+
+			let tab_roster = document.getElementsByClassName('roster')[0].getElementsByTagName('table')[0];
+			for (let cal_item of semester.calendar) {
+				let tbody = document.createElement('tbody');
+				// check if club
+				let is_club = ((cal_item.courses.length == 1)
+					&& (cal_item.courses[0].schedules.length == 1)
+					&& (cal_item.courses[0].schedules[0].type == 'Club')
+				);
+				console.log(is_club);
+				// add the class name
+				let className = cal_item.courses[0].details.split(' ').join('-');
+				tbody.className = className;
+				// the number of schedules per calendar item
+				let title_span = 0;
+				for (let course of cal_item.courses) {
+					// add each row
+					for (let schedule of course.schedules) {
+						let tr = document.createElement('tr');
+						tbody.appendChild(tr);
+					}
+					// stop the details if a club
+					if (is_club) break;
+					// add each details
+					let th_details = document.createElement('th');
+					let txt_details = document.createTextNode(course.details);
+					let th_details_rowspan = document.createAttribute('rowspan');
+					th_details_rowspan.value = course.schedules.length;
+					th_details.setAttributeNode(th_details_rowspan);
+					th_details.appendChild(txt_details);
+					// add to the row up at `title_span`
+					tbody.getElementsByTagName('tr')[title_span].appendChild(th_details);
+					// count the title span
+					title_span += course.schedules.length;
+				}
+				// create the title
+				let th_title = document.createElement('th');
+				th_title.className = 'title';
+				let txt_title = document.createTextNode(cal_item.title);
+				let th_title_rowspan = document.createAttribute('rowspan');
+				th_title_rowspan.value = title_span.toString(10);
+				th_title.setAttributeNode(th_title_rowspan);
+				th_title.appendChild(txt_title);
+				// 2 columns if a club
+				if (is_club) {
+					let th_title_colspan = document.createAttribute('colspan');
+					th_title_colspan.value = '2';
+					th_title.setAttributeNode(th_title_colspan);
+				}
+				// add title to the first row
+				tbody.getElementsByTagName('tr')[0].appendChild(th_title);
+				// add the remaining attributes
+				let i_row = 0;
+				let trs = tbody.getElementsByTagName('tr');
+				for (let course of cal_item.courses) {
+					for (let schedule of course.schedules) {
+						// the type
+						let td_type = document.createElement('td');
+						let txt_type = document.createTextNode(schedule.type);
+						td_type.appendChild(txt_type);
+						// the day
+						let td_day = document.createElement('td');
+						td_day.className = 'day';
+						let arr_day = [];
+						for (let day of days) {
+							if (schedule.day.indexOf(day) != -1) {
+								arr_day.push(day);
+							}
+							else {
+								arr_day.push(' ');
+							}
+						}
+						let txt_day = document.createTextNode(arr_day.join(''));
+						td_day.appendChild(txt_day);
+						// the times
+						let start = [schedule.start[0], ':', schedule.start[1], ' ', schedule.start[2]].join('');
+						let time = [schedule.time[0], ':', schedule.time[1], ' ', schedule.time[2]].join('');
+						if (start.charAt(0) == '0') start = start.substring(1);
+						if (time.charAt(0) == '0') time = time.substring(1);
+						// the start
+						let td_start = document.createElement('td');
+						td_start.className = 'start';
+						let txt_start = document.createTextNode(start);
+						td_start.appendChild(txt_start);
+						// the end time
+						let td_time = document.createElement('td');
+						td_time.className = 'time';
+						let txt_time = document.createTextNode(time);
+						td_time.appendChild(txt_time);
+						// append all
+						trs[i_row].appendChild(td_type);
+						trs[i_row].appendChild(td_day);
+						trs[i_row].appendChild(td_start);
+						trs[i_row].appendChild(td_time);
+						++i_row;
+					}
+				}
+				// append to roster table
+				tab_roster.appendChild(tbody);
+			}
+
+			let tab_calendar = document.getElementsByClassName('calendar')[0];
+			for (let i_time = Math.floor(min_start/60), max_hour = Math.ceil(max_time/60); (i_time < max_hour); ++i_time) {
+				// headers
+				let tr = document.createElement('tr');
+				let th = document.createElement('th');
+				let rowspan = document.createAttribute('rowspan');
+				let scope = document.createAttribute('scope');
+				let text = document.createTextNode(hour_ampm(i_time));
+				rowspan.value = '4';
+				scope.value = 'row';
+				th.setAttributeNode(rowspan);
+				th.setAttributeNode(scope);
+				th.appendChild(text);
+				tr.appendChild(th);
+				tab_calendar.appendChild(tr);
+				// empty rows
+				for (let i_empty_row = 1; (i_empty_row < 4); ++i_empty_row) {
+					tab_calendar.appendChild(document.createElement('tr'));
+				}
+			}
+
+			let cal_start = (60*Math.floor(min_start/60));
+			let cal_time = (60*Math.ceil(max_time/60));
+			let i_row = 1;
+
+			// holds the ending time of each class at the current time
+			// of the current day
+			let time_courses = {};
+
+			for (let i_time = cal_start; (i_time < cal_time); i_time += 15) {
+				let tr = tab_calendar.getElementsByTagName('tr');
+				for (let day of days) {
+					let td = document.createElement('td');
+					let text;
+					let cal_item, course, schedule;
+					let n_rows;
+					if (i_time < time_courses[day]) continue;
+					time_courses[day] = -1;
+					// search for the schedule item corresponding to i_time
+				item_loop:
+					for (cal_item of semester.calendar) {
+						for (course of cal_item.courses) {
+							for (schedule of course.schedules) {
+								let start = time_value(schedule.start);
+								let rel_start = (start - i_time);
+								if ((0 <= rel_start) & (rel_start < 15) & (schedule.day.indexOf(day) != -1))
+								{
+									let time = time_value(schedule.time)
+									time_courses[day] = time;
+									n_rows = Math.ceil((time - start) / 15);
+									break item_loop;
+								}
+							}
+						}
+					}
+					// schedule cells
+					if (time_courses[day] != -1) {
+						let start = [schedule.start[0], ':', schedule.start[1], ' ', schedule.start[2]].join('');
+						let time = [schedule.time[0], ':', schedule.time[1], ' ', schedule.time[2]].join('');
+						let str = [
+							(course.section != '') ? [course.details, course.section].join('-') : course.details,
+							(course.crn != '')     ? [course.crn, schedule.type].join(' ')      : schedule.type,
+							[start, time].join('-'),
+							schedule.location
+						].join('\n');
+						text = document.createTextNode(str);
+						let rowspan = document.createAttribute('rowspan');
+						rowspan.value = n_rows.toString(10);
+						td.setAttributeNode(rowspan);
+						let className = cal_item.courses[0].details.split(' ').join('-');
+						td.className = className;
+					}
+					// empty cells
+					else {
+						text = document.createTextNode('\u00a0'); // nbsp
+					}
+					td.appendChild(text);
+					tr[i_row].appendChild(td);
+				}
+				++i_row;
+			}
+
+			function set_date(semester) {
+				let h3_date = document.getElementsByTagName('h3')[0];
+				let txt_date = document.createTextNode(semester.date);
+				h3_date.appendChild(txt_date);
+			}
+
+			function time_value(time) {
+				let hour = time[0];
+				hour = ((hour == '12') ? 0 : Number(hour));
+				hour += ((time[2] == 'am') ? 0 : 12);
+				let value = ((hour * 60) + Number(time[1]));
+				return value;
+			}
+
+			function hour_ampm(hour) {
+				let ampmhour;
+				let ampm;
+				if (hour < 12) {
+					 ampmhour = (hour == 0) ? '12' : hour;
+					 ampm = 'am'
+				}
+				else {
+					 ampmhour = (hour == 12) ? '12' : (hour - 12);
+					 ampm = 'pm'
+				}
+				return (ampmhour + ampm);
+			}
+		})(semester);
+	</script>
+</body>
+</html>
