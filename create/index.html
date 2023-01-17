@@ -305,13 +305,13 @@
 						trs[i_row].appendChild(td_time);
 						// loop through remaining types and add them as new rows
 						for (let i_type = schedule.types.length; ((--i_type) >= 1); ) {
-							let tr_type_p1 = document.createElement('tr');
-							let td_type_p1 = document.createElement('td');
-							let txt_type_p1 = document.createTextNode(schedule.types[i_type]);
+							let tr_type_np1 = document.createElement('tr');
+							let td_type_np1 = document.createElement('td');
+							let txt_type_np1 = document.createTextNode(schedule.types[i_type]);
 							// append together
-							td_type_p1.appendChild(txt_type_p1);
-							tr_type_p1.appendChild(td_type_p1);
-							trs[i_row].parentNode.insertBefore(tr_type_p1, trs[i_row].nextSibling);
+							td_type_np1.appendChild(txt_type_np1);
+							tr_type_np1.appendChild(td_type_np1);
+							trs[i_row].parentNode.insertBefore(tr_type_np1, trs[i_row].nextSibling);
 						}
 						// increase row index by number of types
 						i_row += schedule.types.length;
