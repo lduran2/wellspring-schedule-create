@@ -370,17 +370,19 @@
 					time_courses[day] = -1;
 					// search for the schedule item corresponding to i_time
 				item_loop:
-					for (cal_item of semester.calendar) {
-						for (course of cal_item.courses) {
-							for (schedule of course.schedules) {
-								let start = time_value(schedule.start);
-								let rel_start = (start - i_time);
-								if ((0 <= rel_start) & (rel_start < 15) & (schedule.day.indexOf(day) != -1))
-								{
-									let time = time_value(schedule.time)
-									time_courses[day] = time;
-									n_rows = Math.ceil((time - start) / 15);
-									break item_loop;
+					for (cal_items of semester.calendar) {
+						for (cal_item of cal_items) {
+							for (course of cal_item.courses) {
+								for (schedule of course.schedules) {
+									let start = time_value(schedule.start);
+									let rel_start = (start - i_time);
+									if ((0 <= rel_start) & (rel_start < 15) & (schedule.day.indexOf(day) != -1))
+									{
+										let time = time_value(schedule.time)
+										time_courses[day] = time;
+										n_rows = Math.ceil((time - start) / 15);
+										break item_loop;
+									}
 								}
 							}
 						}
@@ -400,7 +402,7 @@
 						let rowspan = document.createAttribute('rowspan');
 						rowspan.value = n_rows.toString(10);
 						td.setAttributeNode(rowspan);
-						let className = cal_item.courses[0].details.split(' ').join('-');
+						let className = cal_items[0].courses[0].details.split(' ').join('-');
 						td.className = className;
 					}
 					// empty cells
