@@ -16,10 +16,10 @@
 							{
 								"details" : "[department] [course number]",
 								"section" : "",
+								"n_credits": 0,
 								"crn" : "",
 								"schedules" : [
 									{
-										"n_credits": 0,
 										"types" : ["", "", ],
 										"day" : "[d][d][d][d][d]",
 										"start" : ["hh", "mm", "AMPM"],
@@ -283,16 +283,24 @@
 					let i_row = 0;
 					let trs = tbody.getElementsByTagName('tr');
 					for (let course of cal_item.courses) {
+						// the number of credits
+						let td_n_credits = document.createElement('td');
+						td_n_credits.className = 'n-credits';
+						let th_n_credits_rowspan = document.createAttribute('rowspan');
+						// count all types for this course
+						let n_credits_span = course.schedules.reduce((acc, val) =>
+								(acc + val.types.length), 0)
+						th_n_credits_rowspan.value = n_credits_span;
+						td_n_credits.setAttributeNode(th_n_credits_rowspan.cloneNode());
+						console.log(course);
+						let txt_n_credits = document.createTextNode(course.n_credits.toString(10));
+						td_n_credits.appendChild(txt_n_credits);
+						trs[i_row].appendChild(td_n_credits);
+						// loop through schedules
 						for (let schedule of course.schedules) {
 							// create the span for non-type cells of the schedule
 							let td_schedule_rowspan = document.createAttribute('rowspan');
 							td_schedule_rowspan.value = schedule.types.length.toString(10);
-							// the number of credits
-							let td_n_credits = document.createElement('td');
-							td_n_credits.className = 'n-credits';
-							td_n_credits.setAttributeNode(td_schedule_rowspan.cloneNode());
-							let txt_n_credits = document.createTextNode(schedule.n_credits.toString(10));
-							td_n_credits.appendChild(txt_n_credits);
 							// the first type
 							let td_type = document.createElement('td');
 							let txt_type = document.createTextNode(schedule.types[0]);
@@ -330,7 +338,6 @@
 							let txt_time = document.createTextNode(time);
 							td_time.appendChild(txt_time);
 							// append schedule properties
-							trs[i_row].appendChild(td_n_credits);
 							trs[i_row].appendChild(td_type);
 							trs[i_row].appendChild(td_day);
 							trs[i_row].appendChild(td_start);
