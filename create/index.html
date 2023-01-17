@@ -19,6 +19,7 @@
 								"crn" : "",
 								"schedules" : [
 									{
+										"n_credits": 0,
 										"types" : ["", "", ],
 										"day" : "[d][d][d][d][d]",
 										"start" : ["hh", "mm", "AMPM"],
@@ -42,7 +43,7 @@
 			font-family: tahoma, arial narrow, arial, helvetica, sans-serif;
 		}
 
-		.calendar th, .day, .time, .start {
+		thead th, .calendar th, .day, .time, .start {
 			font-weight: bold;
 			font-size: 0.76rem;
 			font-family: "Trebuchet MS", inherent;
@@ -57,6 +58,10 @@
 
 		.calendar th {
 			vertical-align: top;
+		}
+
+		.n-credits {
+			text-align: center;
 		}
 
 		.day {
@@ -155,6 +160,17 @@
 	<div class='roster'>
 		<h3>Roster</h3>
 		<table>
+			<thead>
+				<tr>
+					<th>Class #</th>
+					<th>Title</th>
+					<th>#cre-<br/>&nbsp;dits</th>
+					<th>Type</th>
+					<th>Class<br/>days</th>
+					<th>Start time</th>
+					<th>End time</th>
+				</tr>
+			</thead>
 		</table>
 	</div>
 	<script type='text/javascript'>
@@ -268,6 +284,15 @@
 					let trs = tbody.getElementsByTagName('tr');
 					for (let course of cal_item.courses) {
 						for (let schedule of course.schedules) {
+							// create the span for non-type cells of the schedule
+							let td_schedule_rowspan = document.createAttribute('rowspan');
+							td_schedule_rowspan.value = schedule.types.length.toString(10);
+							// the number of credits
+							let td_n_credits = document.createElement('td');
+							td_n_credits.className = 'n-credits';
+							td_n_credits.setAttributeNode(td_schedule_rowspan.cloneNode());
+							let txt_n_credits = document.createTextNode(schedule.n_credits.toString(10));
+							td_n_credits.appendChild(txt_n_credits);
 							// the first type
 							let td_type = document.createElement('td');
 							let txt_type = document.createTextNode(schedule.types[0]);
@@ -275,9 +300,7 @@
 							// the day
 							let td_day = document.createElement('td');
 							td_day.className = 'day';
-							let td_day_rowspan = document.createAttribute('rowspan');
-							td_day_rowspan.value = schedule.types.length.toString(10);
-							td_day.setAttributeNode(td_day_rowspan);
+							td_day.setAttributeNode(td_schedule_rowspan.cloneNode());
 							let arr_day = [];
 							for (let day of days) {
 								if (schedule.day.indexOf(day) != -1) {
@@ -297,16 +320,17 @@
 							// the start
 							let td_start = document.createElement('td');
 							td_start.className = 'start';
-							td_start.setAttributeNode(td_day_rowspan.cloneNode());
+							td_start.setAttributeNode(td_schedule_rowspan.cloneNode());
 							let txt_start = document.createTextNode(start);
 							td_start.appendChild(txt_start);
 							// the end time
 							let td_time = document.createElement('td');
 							td_time.className = 'time';
-							td_time.setAttributeNode(td_day_rowspan.cloneNode());
+							td_time.setAttributeNode(td_schedule_rowspan.cloneNode());
 							let txt_time = document.createTextNode(time);
 							td_time.appendChild(txt_time);
-							// append all
+							// append schedule properties
+							trs[i_row].appendChild(td_n_credits);
 							trs[i_row].appendChild(td_type);
 							trs[i_row].appendChild(td_day);
 							trs[i_row].appendChild(td_start);
@@ -316,7 +340,7 @@
 								let tr_type_np1 = document.createElement('tr');
 								let td_type_np1 = document.createElement('td');
 								let txt_type_np1 = document.createTextNode(schedule.types[i_type]);
-								// append together
+								// append together the type
 								td_type_np1.appendChild(txt_type_np1);
 								tr_type_np1.appendChild(td_type_np1);
 								trs[i_row].parentNode.insertBefore(tr_type_np1, trs[i_row].nextSibling);
