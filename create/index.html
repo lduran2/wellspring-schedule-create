@@ -17,7 +17,7 @@
 							"crn" : "",
 							"schedules" : [
 								{
-									"type" : "",
+									"types" : ["", ""],
 									"day" : "[d][d][d][d][d]",
 									"start" : ["hh", "mm", "AMPM"],
 									"time" : ["hh", "mm", "AMPM"],
@@ -203,19 +203,20 @@
 				// check if club
 				let is_club = ((cal_item.courses.length == 1)
 					&& (cal_item.courses[0].schedules.length == 1)
-					&& (cal_item.courses[0].schedules[0].type == 'Club')
+					&& (cal_item.courses[0].schedules[0].types[0] == 'Club')
 				);
 				console.log(is_club);
 				// add the class name
 				let className = cal_item.courses[0].details.split(' ').join('-');
 				tbody.className = className;
 				// the number of schedules per calendar item
-				let title_span = 0;
+				let n_schedules = 0;
 				for (let course of cal_item.courses) {
 					// add each row
 					for (let schedule of course.schedules) {
 						let tr = document.createElement('tr');
 						tbody.appendChild(tr);
+						console.log(schedule.types.length)
 					}
 					// stop the details if a club
 					if (is_club) break;
@@ -223,19 +224,26 @@
 					let th_details = document.createElement('th');
 					let txt_details = document.createTextNode(course.details);
 					let th_details_rowspan = document.createAttribute('rowspan');
-					th_details_rowspan.value = course.schedules.length;
+					// count all types for this course
+					let details_span = course.schedules.reduce((acc, val) =>
+							(acc + val.types.length), 0)
+					th_details_rowspan.value = details_span;
 					th_details.setAttributeNode(th_details_rowspan);
 					th_details.appendChild(txt_details);
-					// add to the row up at `title_span`
-					tbody.getElementsByTagName('tr')[title_span].appendChild(th_details);
+					// add to the row up at `n_schedules`
+					tbody.getElementsByTagName('tr')[n_schedules].appendChild(th_details);
 					// count the title span
-					title_span += course.schedules.length;
+					n_schedules += course.schedules.length;
 				}
 				// create the title
 				let th_title = document.createElement('th');
 				th_title.className = 'title';
 				let txt_title = document.createTextNode(cal_item.title);
 				let th_title_rowspan = document.createAttribute('rowspan');
+				// count all types for this calendar item
+				let title_span = cal_item.courses.reduce((acc, val) =>
+					(acc + val.schedules.reduce((acc, val) =>
+						(acc + val.types.length), 0)), 0);
 				th_title_rowspan.value = title_span.toString(10);
 				th_title.setAttributeNode(th_title_rowspan);
 				th_title.appendChild(txt_title);
@@ -252,13 +260,16 @@
 				let trs = tbody.getElementsByTagName('tr');
 				for (let course of cal_item.courses) {
 					for (let schedule of course.schedules) {
-						// the type
+						// the first type
 						let td_type = document.createElement('td');
-						let txt_type = document.createTextNode(schedule.type);
+						let txt_type = document.createTextNode(schedule.types[0]);
 						td_type.appendChild(txt_type);
 						// the day
 						let td_day = document.createElement('td');
 						td_day.className = 'day';
+						let td_day_rowspan = document.createAttribute('rowspan');
+						td_day_rowspan.value = schedule.types.length.toString(10);
+						td_day.setAttributeNode(td_day_rowspan);
 						let arr_day = [];
 						for (let day of days) {
 							if (schedule.day.indexOf(day) != -1) {
@@ -278,11 +289,13 @@
 						// the start
 						let td_start = document.createElement('td');
 						td_start.className = 'start';
+						td_start.setAttributeNode(td_day_rowspan.cloneNode());
 						let txt_start = document.createTextNode(start);
 						td_start.appendChild(txt_start);
 						// the end time
 						let td_time = document.createElement('td');
 						td_time.className = 'time';
+						td_time.setAttributeNode(td_day_rowspan.cloneNode());
 						let txt_time = document.createTextNode(time);
 						td_time.appendChild(txt_time);
 						// append all
@@ -290,7 +303,18 @@
 						trs[i_row].appendChild(td_day);
 						trs[i_row].appendChild(td_start);
 						trs[i_row].appendChild(td_time);
-						++i_row;
+						// loop through remaining types and add them as new rows
+						for (let i_type = schedule.types.length; ((--i_type) >= 1); ) {
+							let tr_type_p1 = document.createElement('tr');
+							let td_type_p1 = document.createElement('td');
+							let txt_type_p1 = document.createTextNode(schedule.types[i_type]);
+							// append together
+							td_type_p1.appendChild(txt_type_p1);
+							tr_type_p1.appendChild(td_type_p1);
+							trs[i_row].parentNode.insertBefore(tr_type_p1, trs[i_row].nextSibling);
+						}
+						// increase row index by number of types
+						i_row += schedule.types.length;
 					}
 				}
 				// append to roster table
@@ -356,9 +380,10 @@
 					if (time_courses[day] != -1) {
 						let start = [schedule.start[0], ':', schedule.start[1], ' ', schedule.start[2]].join('');
 						let time = [schedule.time[0], ':', schedule.time[1], ' ', schedule.time[2]].join('');
+						let types = schedule.types.join(', ');
 						let str = [
 							(course.section != '') ? [course.details, course.section].join('-') : course.details,
-							(course.crn != '')     ? [course.crn, schedule.type].join(' ')      : schedule.type,
+							(course.crn != '')     ? [course.crn, types].join(' ')              : types,
 							[start, time].join('-'),
 							schedule.location
 						].join('\n');
