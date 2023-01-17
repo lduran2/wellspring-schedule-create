@@ -86,6 +86,10 @@
 			overflow: hidden;
 		}
 
+		.complementary-group {
+			outline: 2px solid black;
+		}
+
 		.roster th {
 			font-weight: inherit;
 		}
@@ -222,19 +226,25 @@
 			let tab_roster = document.getElementsByClassName('roster')[0].getElementsByTagName('table')[0];
 			for (let cal_items of semester.calendar) {
 				// create the class name from first course
-				let className = cal_items[0].courses[0].details.split(' ').join('-');
+				let classNo = cal_items[0].courses[0].details.split(' ').join('-');
+				let classes = [classNo];
+				// group if multiple class_items
+				if (cal_items.length > 1) {
+					classes.push('complementary-group');
+				}
+				console.log(classes);
+				let tbody = document.createElement('tbody');
+				tbody.className = classes.join(' ');
+				// reset the number of schedules per complementary group of calendar items
+				let n_schedules = 0;
+				let i_row = 0;
 				for (let cal_item of cal_items) {
-					let tbody = document.createElement('tbody');
 					// check if club
 					let is_club = ((cal_item.courses.length == 1)
 						&& (cal_item.courses[0].schedules.length == 1)
 						&& (cal_item.courses[0].schedules[0].types[0] == 'Club')
 					);
 					console.log(is_club);
-					// add the class name
-					tbody.className = className;
-					// the number of schedules per calendar item
-					let n_schedules = 0;
 					for (let course of cal_item.courses) {
 						// add each row
 						for (let schedule of course.schedules) {
@@ -250,7 +260,7 @@
 						let th_details_rowspan = document.createAttribute('rowspan');
 						// count all types for this course
 						let details_span = course.schedules.reduce((acc, val) =>
-								(acc + val.types.length), 0)
+							(acc + val.types.length), 0);
 						th_details_rowspan.value = details_span;
 						th_details.setAttributeNode(th_details_rowspan);
 						th_details.appendChild(txt_details);
@@ -278,9 +288,8 @@
 						th_title.setAttributeNode(th_title_colspan);
 					}
 					// add title to the first row
-					tbody.getElementsByTagName('tr')[0].appendChild(th_title);
+					tbody.getElementsByTagName('tr')[i_row].appendChild(th_title);
 					// add the remaining attributes
-					let i_row = 0;
 					let trs = tbody.getElementsByTagName('tr');
 					for (let course of cal_item.courses) {
 						// the number of credits
@@ -289,7 +298,7 @@
 						let th_n_credits_rowspan = document.createAttribute('rowspan');
 						// count all types for this course
 						let n_credits_span = course.schedules.reduce((acc, val) =>
-								(acc + val.types.length), 0)
+							(acc + val.types.length), 0)
 						th_n_credits_rowspan.value = n_credits_span;
 						td_n_credits.setAttributeNode(th_n_credits_rowspan.cloneNode());
 						console.log(course);
